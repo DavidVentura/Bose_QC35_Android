@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity() {
     class State {
         var connection: ConnectionStatus = ConnectionStatus.DISCONNECTED
         var version: String = "UNKNOWN"
-        var ncLevel: String = ""
+        var ncLevel: Protocol.NoiseLevels = Protocol.NoiseLevels.OFF
         var name: String = "UNKNOWN"
         var auto_off_period: Int = -1
     }
@@ -97,18 +97,6 @@ class MainActivity : AppCompatActivity() {
                 }
                 return
             }
-        }
-    }
-
-    fun setNCStatus(e: BTSocket.Events) {
-        val id = when (Protocol.NoiseLevels.valueOf(e.payload!!)) {
-            Protocol.NoiseLevels.HIGH -> R.id.radioNCHigh
-            Protocol.NoiseLevels.LOW -> R.id.radioNCLow
-            Protocol.NoiseLevels.OFF -> R.id.radioNCOff
-            else -> null
-        }
-        id?.let {
-            findViewById<RadioButton>(it).isChecked = true
         }
     }
 
@@ -215,6 +203,12 @@ class MainActivity : AppCompatActivity() {
                     connecting?.visibility = View.VISIBLE
                 }
             }
+            val id = when (state.ncLevel) {
+                Protocol.NoiseLevels.HIGH -> R.id.radioNCHigh
+                Protocol.NoiseLevels.LOW -> R.id.radioNCLow
+                Protocol.NoiseLevels.OFF -> R.id.radioNCOff
+            }
+            findViewById<RadioButton>(id).isChecked = true
             findViewById<TextView>(R.id.version).text = "Version ${state.version}"
             findViewById<TextView>(R.id.name).text = "Name ${state.name}"
 
@@ -242,7 +236,7 @@ class MainActivity : AppCompatActivity() {
                             state.connection = ConnectionStatus.CONNECTED
                             state.version = it.payload!!
                         }
-                        BTSocket.EventType.RCV_NC_LEVEL -> setNCStatus(it)
+                        BTSocket.EventType.RCV_NC_LEVEL -> state.ncLevel = Protocol.NoiseLevels.valueOf(it.payload!!)
                         BTSocket.EventType.RCV_NAME -> state.name = it.payload!!
                         BTSocket.EventType.RCV_AUTO_OFF -> state.auto_off_period = it.payload!!.toInt()
                         BTSocket.EventType.UNKNOWN -> true
