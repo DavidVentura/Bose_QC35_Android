@@ -5,8 +5,6 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.content.pm.PackageManager
-import android.location.Criteria
-import android.location.LocationManager
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -25,6 +23,8 @@ import java.util.concurrent.TimeUnit
 
 
 val uuid: UUID = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb")
+val SAVED_DEVICE_KEY = "com.bose.control.SAVED_DEVICE_KEY"
+val MY_PERMISSIONS_REQUEST_LOCATION = 99
 
 class MainActivity : AppCompatActivity() {
 
@@ -43,14 +43,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     val state = State()
-    val MY_PERMISSIONS_REQUEST_LOCATION = 99
-    var provider: String? = null
     var textview: TextView? = null
     var connecting: ProgressBar? = null
     var socket: BTSocket? = null
-
-    val SAVED_DEVICE_KEY = "com.bose.control.SAVED_DEVICE_KEY"
-
 
     fun checkLocationPermission() {
         if (ContextCompat.checkSelfPermission(
@@ -122,21 +117,11 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_main)
-        val locationManager: LocationManager =
-            getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        provider = locationManager.getBestProvider(Criteria(), false)
         checkLocationPermission()
 
         val button = findViewById<Button>(R.id.button)
         connecting = findViewById(R.id.progressBar)
-
         textview = findViewById(R.id.text)
-
-        val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-        bluetoothAdapter.cancelDiscovery()
-
-        val outgoingMsg: BlockingQueue<ShortArray> = LinkedBlockingQueue()
-        val incomingEvents: BlockingQueue<BTSocket.Events> = LinkedBlockingQueue()
 
         val uiToQueue: Map<View, Protocol.Messages> = mapOf(
             Pair(findViewById(R.id.radioNCHigh), Protocol.Messages.NOISE_LEVEL_HIGH),
@@ -148,6 +133,9 @@ class MainActivity : AppCompatActivity() {
             Pair(findViewById(R.id.radioOFF60), Protocol.Messages.AUTO_OFF_60),
             Pair(findViewById(R.id.radioOFF180), Protocol.Messages.AUTO_OFF_180)
         )
+
+        val outgoingMsg: BlockingQueue<ShortArray> = LinkedBlockingQueue()
+        val incomingEvents: BlockingQueue<BTSocket.Events> = LinkedBlockingQueue()
         uiToQueue.forEach { e ->
             run {
                 e.key.setOnClickListener { outgoingMsg.put(e.value.msg) }
@@ -155,8 +143,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         socket = BTSocket(incomingEvents, outgoingMsg)
+        parseEvents(incomingEvents)
 
-        parseEvents(incomingEvents, outgoingMsg)
+        val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+        bluetoothAdapter.cancelDiscovery()
 
         val entries: Array<String> = bluetoothAdapter.bondedDevices.map { it.name }.toTypedArray()
         val sharedPref = getPreferences(Context.MODE_PRIVATE)
@@ -223,7 +213,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun parseEvents(incomingEvents: BlockingQueue<BTSocket.Events>, outgoingMsg: BlockingQueue<ShortArray>) {
+    fun parseEvents(incomingEvents: BlockingQueue<BTSocket.Events>) {
         Thread {
             while (true) {
                 val event = incomingEvents.poll(1, TimeUnit.SECONDS)
@@ -239,7 +229,7 @@ class MainActivity : AppCompatActivity() {
                         BTSocket.EventType.RCV_NC_LEVEL -> state.ncLevel = Protocol.NoiseLevels.valueOf(it.payload!!)
                         BTSocket.EventType.RCV_NAME -> state.name = it.payload!!
                         BTSocket.EventType.RCV_AUTO_OFF -> state.auto_off_period = it.payload!!.toInt()
-                        BTSocket.EventType.UNKNOWN -> true
+                        BTSocket.EventType.UNKNOWN -> {}
                     }
                     updateUI()
                 }
