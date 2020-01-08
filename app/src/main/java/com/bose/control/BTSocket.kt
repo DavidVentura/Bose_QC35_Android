@@ -26,7 +26,7 @@ class BTSocket constructor(
         }
 
     }
-
+// btrfcomm and bluetooth.src == f4:60:e2:b4:68:c3
     enum class EventType {
         DISCONNECTED,
         CONNECTING,
@@ -35,6 +35,8 @@ class BTSocket constructor(
         RCV_NAME,
         UNKNOWN,
         RCV_AUTO_OFF,
+        RCV_BATTERY_LEVEL,
+        RCV_BTN_MODE,
     }
 
 
@@ -92,6 +94,7 @@ class BTSocket constructor(
                     Log.i("SocketSend", "Sending ${value.asList()}")
                     try {
                         value.forEach { sh -> socket.outputStream.write(sh.toInt()) }
+                        socket.outputStream.flush()
                     } catch (e: IOException) {
                         Log.e("SocketSend", "Failed to write: ${e.localizedMessage}")
                     }
@@ -115,6 +118,7 @@ class BTSocket constructor(
             var count: Int = 0
             val i = socket.inputStream
             Log.i("thread", "Listening on socket")
+            var sawConnected = false
             while (!stop && socket.isConnected) {
                 var bAv : Int
                 try {
@@ -128,9 +132,9 @@ class BTSocket constructor(
                     count += 1
                     if (count >= 15) {
                         count = 0
+                        outgoingMsg.offer(Protocol.Messages.GET_BATTERY_LEVEL.msg)
                         outgoingMsg.put(Protocol.Messages.GET_DEVICE_STATUS.msg)
                         Log.i("thread", "Asking for status")
-
                     }
                     continue
                 }
@@ -145,7 +149,12 @@ class BTSocket constructor(
 
                 bufferToEvents(bufOfShorts).forEach {
                     if (it.type == EventType.CONNECTED) {
+                        sawConnected = true
                         outgoingMsg.offer(Protocol.Messages.GET_DEVICE_STATUS.msg)
+                    }
+                    if (!sawConnected) { // sometimes a connection will be established without the headphones
+                                         // sending a proper connection ACK
+                        outgoingMsg.offer(Protocol.Messages.CONNECT.msg)
                     }
                     emit(it)
                 }

@@ -40,6 +40,8 @@ class MainActivity : AppCompatActivity() {
         var ncLevel: Protocol.NoiseLevels = Protocol.NoiseLevels.OFF
         var name: String = "UNKNOWN"
         var auto_off_period: Int = -1
+        var btnMode: Protocol.ButtonModes = Protocol.ButtonModes.ERROR
+        var batteryLevel: Int = -1
     }
 
     val state = State()
@@ -127,11 +129,12 @@ class MainActivity : AppCompatActivity() {
             Pair(findViewById(R.id.radioNCHigh), Protocol.Messages.NOISE_LEVEL_HIGH),
             Pair(findViewById(R.id.radioNCLow), Protocol.Messages.NOISE_LEVEL_LOW),
             Pair(findViewById(R.id.radioNCOff), Protocol.Messages.NOISE_LEVEL_OFF),
-            Pair(findViewById(R.id.btnDeviceStatus), Protocol.Messages.GET_DEVICE_STATUS),
             Pair(findViewById(R.id.radioOFFNever), Protocol.Messages.AUTO_OFF_NEVER),
             Pair(findViewById(R.id.radioOFF20), Protocol.Messages.AUTO_OFF_20),
             Pair(findViewById(R.id.radioOFF60), Protocol.Messages.AUTO_OFF_60),
-            Pair(findViewById(R.id.radioOFF180), Protocol.Messages.AUTO_OFF_180)
+            Pair(findViewById(R.id.radioOFF180), Protocol.Messages.AUTO_OFF_180),
+            Pair(findViewById(R.id.btnAlexa), Protocol.Messages.BTN_MODE_ALEXA),
+            Pair(findViewById(R.id.btnNC), Protocol.Messages.BTN_MODE_NC)
         )
 
         val outgoingMsg: BlockingQueue<ShortArray> = LinkedBlockingQueue()
@@ -199,8 +202,19 @@ class MainActivity : AppCompatActivity() {
                 Protocol.NoiseLevels.OFF -> R.id.radioNCOff
             }
             findViewById<RadioButton>(id).isChecked = true
+
+            val modeID = when (state.btnMode) {
+                Protocol.ButtonModes.ALEXA -> R.id.btnAlexa
+                Protocol.ButtonModes.NC -> R.id.btnNC
+                Protocol.ButtonModes.ERROR -> null
+            }
+            modeID?.let {
+                findViewById<RadioButton>(modeID).isChecked = true
+            }
+
             findViewById<TextView>(R.id.version).text = "Version ${state.version}"
             findViewById<TextView>(R.id.name).text = "Name ${state.name}"
+            findViewById<TextView>(R.id.battery).text = "Battery level ${state.batteryLevel}"
 
             when (state.auto_off_period) {
                 0 -> findViewById<RadioButton>(R.id.radioOFFNever).isChecked = true
@@ -229,7 +243,10 @@ class MainActivity : AppCompatActivity() {
                         BTSocket.EventType.RCV_NC_LEVEL -> state.ncLevel = Protocol.NoiseLevels.valueOf(it.payload!!)
                         BTSocket.EventType.RCV_NAME -> state.name = it.payload!!
                         BTSocket.EventType.RCV_AUTO_OFF -> state.auto_off_period = it.payload!!.toInt()
-                        BTSocket.EventType.UNKNOWN -> {}
+                        BTSocket.EventType.UNKNOWN -> {
+                        }
+                        BTSocket.EventType.RCV_BTN_MODE -> state.btnMode = Protocol.ButtonModes.valueOf(it.payload!!)
+                        BTSocket.EventType.RCV_BATTERY_LEVEL -> state.batteryLevel = it.payload!!.toInt()
                     }
                     updateUI()
                 }

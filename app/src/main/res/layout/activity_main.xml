@@ -38,116 +38,156 @@
             android:text="Connect" />
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="200dp"
-        android:orientation="horizontal"
-        android:paddingLeft="30dp"
-        android:paddingRight="30dp"
+        android:layout_marginTop="120dp"
+        android:orientation="vertical"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-
-        <RadioGroup
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-
-            <TextView
-                android:id="@+id/autoOffLbl"
-                android:layout_width="100dp"
-                android:layout_height="wrap_content"
-                android:text="Auto OFF" />
-
-            <RadioButton
-                android:id="@+id/radioOFFNever"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Never" />
-
-            <RadioButton
-                android:id="@+id/radioOFF20"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="20 min" />
-
-            <RadioButton
-                android:id="@+id/radioOFF60"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="1h" />
-
-            <RadioButton
-                android:id="@+id/radioOFF180"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="3h" />
-        </RadioGroup>
-
-        <Space
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1" />
+            android:orientation="horizontal"
+            android:paddingLeft="30dp"
+            android:paddingRight="30dp">
 
-        <RadioGroup
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
 
-            <TextView
-                android:id="@+id/textView"
+            <RadioGroup
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/autoOffLbl"
+                    android:layout_width="100dp"
+                    android:layout_height="wrap_content"
+                    android:text="Auto OFF" />
+
+                <RadioButton
+                    android:id="@+id/radioOFFNever"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Never" />
+
+                <RadioButton
+                    android:id="@+id/radioOFF20"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="20 min" />
+
+                <RadioButton
+                    android:id="@+id/radioOFF60"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="1h" />
+
+                <RadioButton
+                    android:id="@+id/radioOFF180"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="3h" />
+            </RadioGroup>
+
+            <Space
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Noise cancelling" />
+                android:layout_weight="1" />
 
-            <RadioButton
-                android:id="@+id/radioNCHigh"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="High" />
+            <RadioGroup
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
 
-            <RadioButton
-                android:id="@+id/radioNCLow"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Low" />
+                <TextView
+                    android:id="@+id/textView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Noise cancelling" />
 
-            <RadioButton
-                android:id="@+id/radioNCOff"
-                android:layout_width="match_parent"
+                <RadioButton
+                    android:id="@+id/radioNCHigh"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="High" />
+
+                <RadioButton
+                    android:id="@+id/radioNCLow"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Low" />
+
+                <RadioButton
+                    android:id="@+id/radioNCOff"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Off"
+                    tools:layout_editor_absoluteX="48dp"
+                    tools:layout_editor_absoluteY="296dp" />
+            </RadioGroup>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingLeft="30dp"
+            android:paddingRight="30dp">
+
+
+            <RadioGroup
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Off"
-                tools:layout_editor_absoluteX="48dp"
-                tools:layout_editor_absoluteY="296dp" />
-        </RadioGroup>
+                android:layout_weight="1" >
+
+                <TextView
+                    android:id="@+id/textView3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Button Mode" />
+
+                <RadioButton
+                    android:id="@+id/btnAlexa"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Alexa" />
+
+                <RadioButton
+                    android:id="@+id/btnNC"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Noise Cancelling" />
+            </RadioGroup>
+            <Space
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+            <Space
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+
+        </LinearLayout>
+
     </LinearLayout>
 
-    <Button
-        android:id="@+id/btnDeviceStatus"
+
+    <TextView
+        android:id="@+id/text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="377dp"
-        android:text="Refresh Device Status"
+        android:layout_marginTop="356dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        android:text="qqq" />
 
     <TextView
         android:id="@+id/name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="476dp"
+        android:layout_marginTop="376dp"
         android:text="name"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -158,10 +198,19 @@
         android:id="@+id/version"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="506dp"
+        android:layout_marginTop="396dp"
         android:text="version"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <TextView
+        android:id="@+id/battery"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="416dp"
+        android:text="battery"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>
