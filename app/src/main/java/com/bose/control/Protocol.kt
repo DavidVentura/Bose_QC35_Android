@@ -7,7 +7,11 @@ class Protocol {
     enum class NoiseLevels(val level: Short) {
         LOW(0x03),
         HIGH(0x01),
-        OFF(0x0)
+        OFF(0x0);
+
+        companion object {
+            fun from(findValue: Short): NoiseLevels = values().first { it.level == findValue }
+        }
     }
 
     enum class AutoOffTimeout(val timeout: Short) {
@@ -33,9 +37,7 @@ class Protocol {
 
     enum class ACKMessages(val msg: ShortArray) {
         CONNECT(shortArrayOf(0x0, 0x1, 0x3, 0x5)),
-        NOISE_LEVEL_HIGH(shortArrayOf(0x1, 0x6, 0x3, 0x2, NoiseLevels.HIGH.level, 0xb)),
-        NOISE_LEVEL_LOW(shortArrayOf(0x1, 0x6, 0x3, 0x2, NoiseLevels.LOW.level, 0xb)),
-        NOISE_LEVEL_OFF(shortArrayOf(0x1, 0x6, 0x3, 0x2, NoiseLevels.OFF.level, 0xb)),
+        NOISE_LEVEL(shortArrayOf(0x1, 0x6, 0x3, 0x2, 0x7F, 0xb)),
         ACK_1(shortArrayOf(0x1, 0x1, 0x7, 0x0)),
         NAME(shortArrayOf(0x1, 0x2, 0x3, 0x7F, 0x0)), // FIXME 0x7F ANY
         LANG(shortArrayOf(0x01, 0x03, 0x03, 0x05, 0x7F, 0x00, 0x7F, 0x7F, 0xde)),
@@ -87,9 +89,7 @@ fun messageToEventAndModifyBuffer(msg: Protocol.ACKMessages, buf: ShortArray) : 
             val minutes = buf[4]
             BTSocket.Events(BTSocket.EventType.RCV_AUTO_OFF, minutes.toString())
         }
-        Protocol.ACKMessages.NOISE_LEVEL_HIGH -> BTSocket.Events(BTSocket.EventType.RCV_NC_LEVEL_HIGH, null)
-        Protocol.ACKMessages.NOISE_LEVEL_LOW -> BTSocket.Events(BTSocket.EventType.RCV_NC_LEVEL_LOW, null)
-        Protocol.ACKMessages.NOISE_LEVEL_OFF -> BTSocket.Events(BTSocket.EventType.RCV_NC_LEVEL_OFF, null)
+        Protocol.ACKMessages.NOISE_LEVEL -> BTSocket.Events(BTSocket.EventType.RCV_NC_LEVEL, Protocol.NoiseLevels.from(buf[4]).toString())
         Protocol.ACKMessages.ACK_1 -> BTSocket.Events(BTSocket.EventType.UNKNOWN, "ACK1")
         Protocol.ACKMessages.NAME -> {
             val nameBuf = buf.copyOfRange(

@@ -31,9 +31,7 @@ class BTSocket constructor(
         DISCONNECTED,
         CONNECTING,
         CONNECTED,
-        RCV_NC_LEVEL_HIGH,
-        RCV_NC_LEVEL_LOW,
-        RCV_NC_LEVEL_OFF,
+        RCV_NC_LEVEL,
         RCV_NAME,
         UNKNOWN,
         RCV_AUTO_OFF,
@@ -118,7 +116,7 @@ class BTSocket constructor(
             val i = socket.inputStream
             Log.i("thread", "Listening on socket")
             while (!stop && socket.isConnected) {
-                var bAv = 0
+                var bAv : Int
                 try {
                     bAv = i.available()
                 } catch (e: IOException) {

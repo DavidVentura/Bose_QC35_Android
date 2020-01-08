@@ -33,7 +33,7 @@ class ProtocolKtTest {
             BTSocket.Events(BTSocket.EventType.RCV_NAME, "Bose QC35 II"),
             BTSocket.Events(BTSocket.EventType.UNKNOWN, "Got some language 129"), // FIXME
             BTSocket.Events(BTSocket.EventType.RCV_AUTO_OFF, "20"),
-            BTSocket.Events(BTSocket.EventType.RCV_NC_LEVEL_HIGH, null)
+            BTSocket.Events(BTSocket.EventType.RCV_NC_LEVEL, Protocol.NoiseLevels.HIGH.toString())
         )
 
         assertEquals(bufferToEvents(statusReply), expectedStatusMessages)

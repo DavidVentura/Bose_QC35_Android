@@ -18,7 +18,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
@@ -29,10 +28,24 @@ val uuid: UUID = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb")
 
 class MainActivity : AppCompatActivity() {
 
+    enum class ConnectionStatus {
+        CONNECTED,
+        CONNECTING,
+        DISCONNECTED
+    }
+
+    class State {
+        var connection: ConnectionStatus = ConnectionStatus.DISCONNECTED
+        var version: String = "UNKNOWN"
+        var ncLevel: String = ""
+        var name: String = "UNKNOWN"
+        var auto_off_period: Int = -1
+    }
+
+    val state = State()
     val MY_PERMISSIONS_REQUEST_LOCATION = 99
     var provider: String? = null
     var textview: TextView? = null
-
     var connecting: ProgressBar? = null
     var socket: BTSocket? = null
 
@@ -88,10 +101,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun setNCStatus(e: BTSocket.Events) {
-        val id = when (e.type) {
-            BTSocket.EventType.RCV_NC_LEVEL_HIGH -> R.id.radioNCHigh
-            BTSocket.EventType.RCV_NC_LEVEL_LOW -> R.id.radioNCLow
-            BTSocket.EventType.RCV_NC_LEVEL_OFF -> R.id.radioNCOff
+        val id = when (Protocol.NoiseLevels.valueOf(e.payload!!)) {
+            Protocol.NoiseLevels.HIGH -> R.id.radioNCHigh
+            Protocol.NoiseLevels.LOW -> R.id.radioNCLow
+            Protocol.NoiseLevels.OFF -> R.id.radioNCOff
             else -> null
         }
         id?.let {
@@ -99,24 +112,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun setStatusText(text: String) {
-        runOnUiThread {
-            this.textview?.text = text
-            this.textview?.visibility = View.VISIBLE
-        }
-    }
-
-    fun setProgressVisible(visible: Boolean) {
-        runOnUiThread {
-            connecting?.visibility = when (visible) {
-                true -> View.VISIBLE
-                false -> View.INVISIBLE
-            }
-        }
-    }
-
     fun connect(device: BluetoothDevice) {
-        setProgressVisible(true)
         Thread {
             socket?.connectToDevice(device)
         }.start()
@@ -147,7 +143,6 @@ class MainActivity : AppCompatActivity() {
         connecting = findViewById(R.id.progressBar)
 
         textview = findViewById(R.id.text)
-        setProgressVisible(false)
 
         val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
         bluetoothAdapter.cancelDiscovery()
@@ -165,9 +160,11 @@ class MainActivity : AppCompatActivity() {
             Pair(findViewById(R.id.radioOFF60), Protocol.Messages.AUTO_OFF_60),
             Pair(findViewById(R.id.radioOFF180), Protocol.Messages.AUTO_OFF_180)
         )
-        uiToQueue.forEach { e -> run {
-            e.key.setOnClickListener { outgoingMsg.put(e.value.msg)}
-        } }
+        uiToQueue.forEach { e ->
+            run {
+                e.key.setOnClickListener { outgoingMsg.put(e.value.msg) }
+            }
+        }
 
         socket = BTSocket(incomingEvents, outgoingMsg)
 
@@ -199,7 +196,39 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // FIXME set state and have update UI function
+    fun updateUI() {
+        runOnUiThread {
+            when (state.connection) {
+                ConnectionStatus.DISCONNECTED -> {
+                    textview?.text = "DISCONNECTED"
+                    textview?.visibility = View.VISIBLE
+                    connecting?.visibility = View.INVISIBLE
+                }
+                ConnectionStatus.CONNECTED -> {
+                    textview?.text = "CONNECTED"
+                    textview?.visibility = View.VISIBLE
+                    connecting?.visibility = View.INVISIBLE
+                }
+                ConnectionStatus.CONNECTING -> {
+                    textview?.text = "CONNECTING"
+                    textview?.visibility = View.VISIBLE
+                    connecting?.visibility = View.VISIBLE
+                }
+            }
+            findViewById<TextView>(R.id.version).text = "Version ${state.version}"
+            findViewById<TextView>(R.id.name).text = "Name ${state.name}"
+
+            when (state.auto_off_period) {
+                0 -> findViewById<RadioButton>(R.id.radioOFFNever).isChecked = true
+                20 -> findViewById<RadioButton>(R.id.radioOFF20).isChecked = true
+                60 -> findViewById<RadioButton>(R.id.radioOFF60).isChecked = true
+                180 -> findViewById<RadioButton>(R.id.radioOFF180).isChecked = true
+                else -> Log.e("AUTO_OFF", "Can't handle ${state.auto_off_period}")
+            }
+
+        }
+    }
+
     fun parseEvents(incomingEvents: BlockingQueue<BTSocket.Events>, outgoingMsg: BlockingQueue<ShortArray>) {
         Thread {
             while (true) {
@@ -207,42 +236,23 @@ class MainActivity : AppCompatActivity() {
                 event?.let {
                     Log.i("Events", "Got ${it.type.name} ${it.payload}")
                     when (it.type) {
-                        BTSocket.EventType.DISCONNECTED -> setStatusText("DISCONNECTED")
-                        BTSocket.EventType.CONNECTING -> setStatusText("CONNECTING")
+                        BTSocket.EventType.DISCONNECTED -> state.connection = ConnectionStatus.DISCONNECTED
+                        BTSocket.EventType.CONNECTING -> state.connection = ConnectionStatus.CONNECTING
                         BTSocket.EventType.CONNECTED -> {
-                            setStatusText("CONNECTED")
-                            runOnUiThread {
-                                progressBar.visibility = View.INVISIBLE
-                                findViewById<TextView>(R.id.version).text = "Version ${it.payload}"
-                                findViewById<TextView>(R.id.text).visibility = View.INVISIBLE
-
-                            }
+                            state.connection = ConnectionStatus.CONNECTED
+                            state.version = it.payload!!
                         }
-                        BTSocket.EventType.RCV_NC_LEVEL_HIGH -> setNCStatus(it)
-                        BTSocket.EventType.RCV_NC_LEVEL_LOW -> setNCStatus(it)
-                        BTSocket.EventType.RCV_NC_LEVEL_OFF -> setNCStatus(it)
-                        BTSocket.EventType.RCV_NAME -> runOnUiThread {
-                            findViewById<TextView>(R.id.name).text = "Name ${it.payload}"
-                            runOnUiThread {
-                                progressBar.visibility = View.INVISIBLE
-                            }
-                        }
-                        BTSocket.EventType.RCV_AUTO_OFF -> runOnUiThread {
-                            when (it.payload!!.toInt()) {
-                                0 -> findViewById<RadioButton>(R.id.radioOFFNever).isChecked = true
-                                20 -> findViewById<RadioButton>(R.id.radioOFF20).isChecked = true
-                                60 -> findViewById<RadioButton>(R.id.radioOFF60).isChecked = true
-                                180 -> findViewById<RadioButton>(R.id.radioOFF180).isChecked = true
-                                else -> Log.e("AUTO_OFF", "Can't handle ${it.payload}")
-                            }
-
-                        }
+                        BTSocket.EventType.RCV_NC_LEVEL -> setNCStatus(it)
+                        BTSocket.EventType.RCV_NAME -> state.name = it.payload!!
+                        BTSocket.EventType.RCV_AUTO_OFF -> state.auto_off_period = it.payload!!.toInt()
                         BTSocket.EventType.UNKNOWN -> true
                     }
+                    updateUI()
                 }
             }
         }.start()
     }
+
 
     private fun showDialog(array: Array<String>, callback: (String) -> Unit) {
 
