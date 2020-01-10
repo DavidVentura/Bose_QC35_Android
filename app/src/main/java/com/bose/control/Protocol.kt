@@ -1,6 +1,7 @@
 package com.bose.control
 
 import android.util.Log
+val ANY: Short = 0x7F
 
 class Protocol {
 
@@ -51,12 +52,12 @@ class Protocol {
         CONNECT(shortArrayOf        (0x0, 0x1, 0x3, 0x5)),
         ACK_1(shortArrayOf          (0x1, 0x1, 0x7, 0x0)),
         ACK_2(shortArrayOf          (0x1, 0x1, 0x6, 0x0)),
-        NAME(shortArrayOf           (0x1, 0x2, 0x3, 0x7F, 0x0)), // FIXME 0x7F ANY
-        AUTO_OFF(shortArrayOf       (0x1, 0x4, 0x3, 0x1, 0x7F)),
-        NOISE_LEVEL(shortArrayOf    (0x1, 0x6, 0x3, 0x2, 0x7F, 0xb)),
-        LANG(shortArrayOf           (0x1, 0x3, 0x3, 0x5, 0x7F, 0x00, 0x7F, 0x7F, 0xde)),
-        BATTERY_LEVEL(shortArrayOf  (0x02, 0x02, 0x03, 0x01, 0x7F)),
-        BTN_ACTION(shortArrayOf     (0x01, 0x09, 0x03, 0x04, 0x10, 0x04, 0x7F, 0x07)),
+        NAME(shortArrayOf           (0x1, 0x2, 0x3, ANY, 0x0)),
+        AUTO_OFF(shortArrayOf       (0x1, 0x4, 0x3, 0x1, ANY)),
+        NOISE_LEVEL(shortArrayOf    (0x1, 0x6, 0x3, 0x2, ANY, 0xb)),
+        LANG(shortArrayOf           (0x1, 0x3, 0x3, 0x5, ANY, 0x00, ANY, ANY, 0xde)),
+        BATTERY_LEVEL(shortArrayOf  (0x02, 0x02, 0x03, 0x01, ANY)),
+        BTN_ACTION(shortArrayOf     (0x01, 0x09, 0x03, 0x04, 0x10, 0x04, ANY, 0x07)),
         UNKNOWN(shortArrayOf(0x7E, 0x7E)) // 0x7E is an invalid byte to receive
                                           // this value is only used to mark that we could not parse anything
     }
@@ -78,7 +79,7 @@ fun matchBufferToACKMessage(buf: ShortArray): Protocol.ACKMessages? {
         Log.d("thread", "Comparing $items with $firstBytes")
 
         val allBytesMatchOrAreMasked = items.mapIndexed { index, comp ->
-            (comp == buf[index]) || comp == 0x7F.toShort()
+            (comp == buf[index]) || comp == ANY
         }.all { i -> i }
 
         if (allBytesMatchOrAreMasked) {
