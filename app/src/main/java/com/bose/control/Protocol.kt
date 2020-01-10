@@ -18,7 +18,7 @@ class Protocol {
         NC(0x02),
         ERROR(0x7F);
         companion object {
-            fun from(findValue: Short): ButtonModes = ButtonModes.values().first { it.mode == findValue }
+            fun from(findValue: Short): ButtonModes = values().first { it.mode == findValue }
         }
     }
 
@@ -42,8 +42,8 @@ class Protocol {
 
         GET_DEVICE_STATUS(shortArrayOf( 0x01, 0x01, 0x05, 0x00)),
         GET_BATTERY_LEVEL(shortArrayOf( 0x02, 0x02, 0x01, 0x00)),
-        BTN_MODE_ALEXA(shortArrayOf(    0x1, 0x9, 0x2, 0x3, 0x10, 0x4, 0x1)),
-        BTN_MODE_NC(shortArrayOf(       0x1, 0x9, 0x2, 0x3, 0x10, 0x4, 0x2)),
+        BTN_MODE_ALEXA(shortArrayOf(    0x01, 0x09, 0x02, 0x03, 0x10, 0x04, 0x01)),
+        BTN_MODE_NC(shortArrayOf(       0x01, 0x09, 0x02, 0x03, 0x10, 0x04, 0x02)),
     }
 
 
@@ -55,9 +55,10 @@ class Protocol {
         AUTO_OFF(shortArrayOf       (0x1, 0x4, 0x3, 0x1, 0x7F)),
         NOISE_LEVEL(shortArrayOf    (0x1, 0x6, 0x3, 0x2, 0x7F, 0xb)),
         LANG(shortArrayOf           (0x1, 0x3, 0x3, 0x5, 0x7F, 0x00, 0x7F, 0x7F, 0xde)),
-        BATTERY_LEVEL(shortArrayOf  (0x02, 0x02, 0x03, 0x01)),
-        BTN_ACTION(shortArrayOf(     0x01, 0x09, 0x03, 0x04, 0x10, 0x04, 0x7F, 0x07)),
-        UNKNOWN(shortArrayOf(0x7E, 0x7E)) // FIXME 0x7E "NOTHING"
+        BATTERY_LEVEL(shortArrayOf  (0x02, 0x02, 0x03, 0x01, 0x7F)),
+        BTN_ACTION(shortArrayOf     (0x01, 0x09, 0x03, 0x04, 0x10, 0x04, 0x7F, 0x07)),
+        UNKNOWN(shortArrayOf(0x7E, 0x7E)) // 0x7E is an invalid byte to receive
+                                          // this value is only used to mark that we could not parse anything
     }
 
 
@@ -125,10 +126,6 @@ fun messageToEventAndModifyBuffer(msg: Protocol.ACKMessages, buf: ShortArray) : 
         )
         Protocol.ACKMessages.BATTERY_LEVEL -> {
             val batteryValue = buf[4]
-            localBuf = buf.copyOfRange(
-                1,
-                buf.size
-            ) // Advance `buf` by the length of the battery status (1 byte)
             BTSocket.Events(BTSocket.EventType.RCV_BATTERY_LEVEL, batteryValue.toString())
         }
         Protocol.ACKMessages.BTN_ACTION -> {
