@@ -35,8 +35,9 @@ class ProtocolKtTest {
             BTSocket.Events(BTSocket.EventType.UNKNOWN, "Got some language 129"), // FIXME
             BTSocket.Events(BTSocket.EventType.RCV_AUTO_OFF, "20"),
             BTSocket.Events(BTSocket.EventType.RCV_NC_LEVEL, Protocol.NoiseLevels.HIGH.toString()),
-            BTSocket.Events(BTSocket.EventType.RCV_BTN_MODE, "2")
-        )
+            BTSocket.Events(BTSocket.EventType.RCV_BTN_MODE, Protocol.ButtonModes.NC.toString()),
+            BTSocket.Events(BTSocket.EventType.UNKNOWN, "ACK2")
+            )
 
         assertEquals(bufferToEvents(statusReply), expectedStatusMessages)
     }
