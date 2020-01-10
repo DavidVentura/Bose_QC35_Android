@@ -12,7 +12,8 @@ class BTSocket constructor(
     private val outgoingMsg: BlockingQueue<ShortArray>
 ) {
 
-    val ANY: Byte = 0x7F
+    private var inHandler: Thread? = null
+    private var outHandler: Thread? = null
 
     class Events constructor(
         val type: EventType,
@@ -26,7 +27,7 @@ class BTSocket constructor(
         }
 
     }
-// btrfcomm and bluetooth.src == f4:60:e2:b4:68:c3
+
     enum class EventType {
         DISCONNECTED,
         CONNECTING,
@@ -56,28 +57,38 @@ class BTSocket constructor(
                 Log.i("client", "socket was still connected")
                 it.close()
                 Log.i("client", "old socket closed")
+                stop = true
+                inHandler?.join()
+                Log.i("client", "inHandler joined")
+                outHandler?.join()
+                Log.i("client", "outHandler joined")
+
             }
         }
+        stop = false
 
         emit(Events(EventType.CONNECTING, null))
         socket = device.createRfcommSocketToServiceRecord(uuid)
 
         Log.i("client", "Socket created")
 
-        try {
-            socket!!.connect()
+        Thread {
+            try {
+                socket!!.connect()
 
-        } catch (e: IOException) {
-            Log.e("client", "Failed to connect: ${e.localizedMessage}")
-            socket!!.close()
-            return
-        }
-        Log.i("client", "Connected? ${socket!!.isConnected}")
-        if (socket!!.isConnected) {
-            outgoingMsg.offer(Protocol.Messages.CONNECT.msg)
-            MessageHandler(socket!!).start()
-            OutputHandler(socket!!).start()
-        }
+            } catch (e: IOException) {
+                Log.e("client", "Failed to connect: ${e.localizedMessage}")
+                socket!!.close()
+            }
+            Log.i("client", "Connected? ${socket!!.isConnected}")
+            if (socket!!.isConnected) {
+                outgoingMsg.offer(Protocol.Messages.CONNECT.msg)
+                inHandler = MessageHandler(socket!!)
+                outHandler = OutputHandler(socket!!)
+                inHandler!!.start()
+                outHandler!!.start()
+            }
+        }.start()
     }
 
 
@@ -89,7 +100,7 @@ class BTSocket constructor(
             while (socket.isConnected && !stop) {
                 Log.i("SocketSend", "About to poll")
 
-                val value = outgoingMsg.poll(10, TimeUnit.SECONDS)
+                val value = outgoingMsg.poll(1, TimeUnit.SECONDS)
                 if (value != null) {
                     Log.i("SocketSend", "Sending ${value.asList()}")
                     try {

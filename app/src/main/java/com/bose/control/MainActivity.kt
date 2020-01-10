@@ -98,9 +98,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun connect(device: BluetoothDevice) {
-        Thread {
-            socket?.connectToDevice(device)
-        }.start()
+
+
 
     }
 
@@ -157,7 +156,7 @@ class MainActivity : AppCompatActivity() {
         val device_name = sharedPref.getString(SAVED_DEVICE_KEY, null)
         device_name?.let {
             Log.i("preferences", "Read name $SAVED_DEVICE_KEY = $device_name")
-            connect(findDeviceByName(bluetoothAdapter, it))
+            socket?.connectToDevice(findDeviceByName(bluetoothAdapter, it))
         }
 
 
@@ -171,7 +170,7 @@ class MainActivity : AppCompatActivity() {
                     Log.i("preferences", "Saving name $SAVED_DEVICE_KEY = $pickedEntry")
                     commit()
                 }
-                connect(device)
+                socket?.connectToDevice(device)
 
             })
         }
