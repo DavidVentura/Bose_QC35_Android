@@ -45,54 +45,6 @@ class MainActivity : AppCompatActivity() {
     var connecting: ProgressBar? = null
     var socket: BTSocket? = null
 
-    fun checkLocationPermission() {
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) { // Should we show an explanation?
-            if (ActivityCompat.shouldShowRequestPermissionRationale(
-                    this,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                )
-            ) {
-                //Prompt the user once explanation has been shown
-                ActivityCompat.requestPermissions(
-                    this@MainActivity,
-                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                    MY_PERMISSIONS_REQUEST_LOCATION
-                )
-            }
-        } else { // No explanation needed, we can request the permission.
-            ActivityCompat.requestPermissions(
-                this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                MY_PERMISSIONS_REQUEST_LOCATION
-            )
-        }
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String?>, grantResults: IntArray
-    ) {
-        when (requestCode) {
-            MY_PERMISSIONS_REQUEST_LOCATION -> {
-                val request_completed =
-                    (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
-                if (request_completed) {
-                    val perm = ContextCompat.checkSelfPermission(
-                        this,
-                        Manifest.permission.ACCESS_FINE_LOCATION
-                    )
-                    if (perm == PackageManager.PERMISSION_GRANTED) { //Request location updates:
-                        Log.i("Location", "permission granted")
-                    }
-                }
-                return
-            }
-        }
-    }
-
     override fun onDestroy() {
         socket?.let {
             it.stop = true
@@ -108,7 +60,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_main)
-        checkLocationPermission()
 
         val button = findViewById<Button>(R.id.button)
         connecting = findViewById(R.id.progressBar)
