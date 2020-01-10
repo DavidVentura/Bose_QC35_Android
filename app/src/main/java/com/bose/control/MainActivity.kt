@@ -8,10 +8,7 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.widget.Button
-import android.widget.ProgressBar
-import android.widget.RadioButton
-import android.widget.TextView
+import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -45,7 +42,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     val state = State()
-    var textview: TextView? = null
     var connecting: ProgressBar? = null
     var socket: BTSocket? = null
 
@@ -97,12 +93,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun connect(device: BluetoothDevice) {
-
-
-
-    }
-
     override fun onDestroy() {
         socket?.let {
             it.stop = true
@@ -122,7 +112,6 @@ class MainActivity : AppCompatActivity() {
 
         val button = findViewById<Button>(R.id.button)
         connecting = findViewById(R.id.progressBar)
-        textview = findViewById(R.id.text)
 
         val uiToQueue: Map<View, Protocol.Messages> = mapOf(
             Pair(findViewById(R.id.radioNCHigh), Protocol.Messages.NOISE_LEVEL_HIGH),
@@ -156,6 +145,7 @@ class MainActivity : AppCompatActivity() {
         val device_name = sharedPref.getString(SAVED_DEVICE_KEY, null)
         device_name?.let {
             Log.i("preferences", "Read name $SAVED_DEVICE_KEY = $device_name")
+            state.name = device_name
             socket?.connectToDevice(findDeviceByName(bluetoothAdapter, it))
         }
 
@@ -170,29 +160,35 @@ class MainActivity : AppCompatActivity() {
                     Log.i("preferences", "Saving name $SAVED_DEVICE_KEY = $pickedEntry")
                     commit()
                 }
+                state.name = pickedEntry
                 socket?.connectToDevice(device)
 
             })
         }
+        updateUI()
     }
+
 
     fun updateUI() {
         runOnUiThread {
             when (state.connection) {
                 ConnectionStatus.DISCONNECTED -> {
-                    textview?.text = "DISCONNECTED"
-                    textview?.visibility = View.VISIBLE
                     connecting?.visibility = View.INVISIBLE
+                    findViewById<LinearLayout>(R.id.settingsLayout).visibility = View.INVISIBLE
+                    findViewById<LinearLayout>(R.id.connectLayout).visibility = View.VISIBLE
+                    findViewById<TextView>(R.id.lblStatus).text = "Pick a device to connect to."
                 }
                 ConnectionStatus.CONNECTED -> {
-                    textview?.text = "CONNECTED"
-                    textview?.visibility = View.VISIBLE
                     connecting?.visibility = View.INVISIBLE
+                    findViewById<LinearLayout>(R.id.settingsLayout).visibility = View.VISIBLE
+                    findViewById<LinearLayout>(R.id.connectLayout).visibility = View.INVISIBLE
+                    findViewById<TextView>(R.id.lblStatus).text = "Connected to ${state.name}"
                 }
                 ConnectionStatus.CONNECTING -> {
-                    textview?.text = "CONNECTING"
-                    textview?.visibility = View.VISIBLE
                     connecting?.visibility = View.VISIBLE
+                    findViewById<LinearLayout>(R.id.settingsLayout).visibility = View.INVISIBLE
+                    findViewById<LinearLayout>(R.id.connectLayout).visibility = View.VISIBLE
+                    findViewById<TextView>(R.id.lblStatus).text = "Connecting to ${state.name}"
                 }
             }
             val id = when (state.ncLevel) {

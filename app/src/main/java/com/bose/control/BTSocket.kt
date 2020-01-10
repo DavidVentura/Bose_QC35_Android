@@ -87,6 +87,8 @@ class BTSocket constructor(
                 outHandler = OutputHandler(socket!!)
                 inHandler!!.start()
                 outHandler!!.start()
+            } else {
+                incomingEvents.put(Events(EventType.DISCONNECTED, "Disconnected from device"))
             }
         }.start()
     }
@@ -108,6 +110,8 @@ class BTSocket constructor(
                         socket.outputStream.flush()
                     } catch (e: IOException) {
                         Log.e("SocketSend", "Failed to write: ${e.localizedMessage}")
+                        stop = true
+                        break
                     }
                 } else {
                     sleep(100)
